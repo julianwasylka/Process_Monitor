@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Input;
 
-namespace ProcessManager.ViewModels
+namespace ProcessMonitor.ViewModels
 {
     public class RelayCommand : ICommand
     {

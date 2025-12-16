@@ -1,0 +1,40 @@
+﻿<Window x:Class="ProcessMonitor.Views.TrackingWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Śledzenie Zadań" Height="400" Width="600">
+    <Grid>
+        <ListBox ItemsSource="{Binding TrackedTasks}" HorizontalContentAlignment="Stretch">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Border BorderBrush="Gray" BorderThickness="1" Margin="2" Padding="5" Background="WhiteSmoke">
+                        <Border.ToolTip>
+                            <ToolTip>
+                                <StackPanel>
+                                    <TextBlock Text="Czas śledzenia:"/>
+                                    <TextBlock Text="{Binding ElapsedTime}" FontWeight="Bold"/>
+                                </StackPanel>
+                            </ToolTip>
+                        </Border.ToolTip>
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel>
+                                <TextBlock Text="{Binding ProcessName}" FontWeight="Bold" FontSize="14"/>
+                                <TextBlock Text="{Binding Status}" Foreground="Blue"/>
+                                <TextBlock Text="Ostatnie odczyty pamięci:" Margin="0,5,0,0" FontStyle="Italic"/>
+                                <ListBox ItemsSource="{Binding MemoryHistory}" Height="60" BorderThickness="0" Background="Transparent"/>
+                            </StackPanel>
+
+                            <Button Grid.Column="1" Content="Zatrzymaj" Command="{Binding StopTrackingCommand}" 
+                                    Height="30" VerticalAlignment="Top" Padding="10,0"/>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+    </Grid>
+</Window>

@@ -1,18 +1,49 @@
 ﻿using System;
 using System.Diagnostics;
+using ProcessMonitor.ViewModels; 
 
-namespace ProcessManager.Models
+namespace ProcessMonitor.Models
 {
-    public class ProcessItem
+    public class ProcessItem : ViewModelBase
     {
         public Process UnderlyingProcess { get; }
 
         public int Id { get; }
         public string Name { get; }
-        public long MemorySizeBytes { get; private set; }
-        public int ThreadCount { get; private set; }
-        public DateTime? StartTime { get; private set; }
-        public string Priority { get; private set; }
+
+        private long _memorySizeBytes;
+        public long MemorySizeBytes
+        {
+            get => _memorySizeBytes;
+            private set
+            {
+                if (SetProperty(ref _memorySizeBytes, value))
+                {
+                    OnPropertyChanged(nameof(MemoryInMB));
+                }
+            }
+        }
+
+        private int _threadCount;
+        public int ThreadCount
+        {
+            get => _threadCount;
+            private set => SetProperty(ref _threadCount, value);
+        }
+
+        private DateTime? _startTime;
+        public DateTime? StartTime
+        {
+            get => _startTime;
+            private set => SetProperty(ref _startTime, value);
+        }
+
+        private string _priority;
+        public string Priority
+        {
+            get => _priority;
+            private set => SetProperty(ref _priority, value);
+        }
 
         public string MemoryInMB => $"{(MemorySizeBytes / 1024.0 / 1024.0):F2} MB";
 
@@ -31,14 +62,8 @@ namespace ProcessManager.Models
             {
                 hasExited = UnderlyingProcess.HasExited;
             }
-            catch (System.ComponentModel.Win32Exception)
-            {
-                hasExited = false;
-            }
-            catch
-            {
-                hasExited = true;
-            }
+            catch (System.ComponentModel.Win32Exception) { hasExited = false; }
+            catch { hasExited = true; }
 
             if (hasExited) return;
 
