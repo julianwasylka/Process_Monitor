@@ -11,6 +11,11 @@ namespace ProcessMonitor.Models
         private CancellationTokenSource _cts;
         private readonly int _processId;
 
+        private readonly string _activeStatus = "Śledzenie aktywne";
+        private readonly string _cancelledStatus = "Zatrzymano";
+        private readonly string _stoppedStatus = "Zakończono";
+        private readonly string _noAccessStatus = "Proces niedostępny";
+
         public string ProcessName { get; }
         public DateTime StartTrackingTime { get; }
         public ObservableCollection<string> MemoryHistory { get; } = new ObservableCollection<string>();
@@ -36,7 +41,7 @@ namespace ProcessMonitor.Models
             ProcessName = processName;
             _processId = processId;
             StartTrackingTime = DateTime.Now;
-            Status = "Śledzenie aktywne";
+            Status = _activeStatus;
 
             _cts = new CancellationTokenSource();
             StopTrackingCommand = new RelayCommand(o =>
@@ -53,7 +58,7 @@ namespace ProcessMonitor.Models
             if (!_cts.IsCancellationRequested)
             {
                 _cts.Cancel();
-                Status = "Zatrzymano";
+                Status = _cancelledStatus;
             }
         }
 
@@ -66,35 +71,37 @@ namespace ProcessMonitor.Models
                     var diff = DateTime.Now - StartTrackingTime;
                     ElapsedTime = $"{diff.Hours:00}:{diff.Minutes:00}:{diff.Seconds:00}";
 
-                    try
+                    var process = System.Diagnostics.Process.GetProcessById(_processId);
+                    if (process.HasExited)
                     {
-                        var process = System.Diagnostics.Process.GetProcessById(_processId);
-                        if (process.HasExited)
-                        {
-                            Status = "Proces zakończony";
-                            break;
-                        }
-
-                        double memMB = process.WorkingSet64 / 1024.0 / 1024.0;
-
-                        System.Windows.Application.Current.Dispatcher.Invoke(() =>
-                        {
-                            MemoryHistory.Add($"[{DateTime.Now:HH:mm:ss}] {memMB:F2} MB");
-                            if (MemoryHistory.Count > 10) MemoryHistory.RemoveAt(0);
-                        });
-                    }
-                    catch
-                    {
-                        Status = "Proces niedostępny";
                         break;
                     }
+
+                    double memMB = process.WorkingSet64 / 1024.0 / 1024.0;
+
+                    System.Windows.Application.Current.Dispatcher.Invoke(() =>
+                    {
+                        MemoryHistory.Add($"[{DateTime.Now:HH:mm:ss}] {memMB:F2} MB");
+                        if (MemoryHistory.Count > 10) MemoryHistory.RemoveAt(0);
+                    });
 
                     await Task.Delay(2000, token);
                 }
             }
             catch (TaskCanceledException)
             {
-                Status = "Anulowano zadanie";
+                Status = _cancelledStatus;
+            }
+            catch (Exception)
+            {
+                Status = _noAccessStatus;
+            }
+            finally
+            {
+                if (Status == _activeStatus)
+                {
+                    Status = _stoppedStatus;
+                }
             }
         }
     }
