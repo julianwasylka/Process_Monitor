@@ -47,6 +47,9 @@ namespace ProcessMonitor.Models
 
         public string MemoryInMB => $"{(MemorySizeBytes / 1024.0 / 1024.0):F2} MB";
 
+        private bool _ignorePriority;
+        private bool _ignoreStartTime;
+
         public ProcessItem(Process process)
         {
             UnderlyingProcess = process;
@@ -57,6 +60,8 @@ namespace ProcessMonitor.Models
 
         public void RefreshData()
         {
+            //try { UnderlyingProcess.Refresh(); } catch { }
+
             bool hasExited = false;
             try
             {
@@ -69,8 +74,17 @@ namespace ProcessMonitor.Models
 
             try { MemorySizeBytes = UnderlyingProcess.WorkingSet64; } catch { MemorySizeBytes = 0; }
             try { ThreadCount = UnderlyingProcess.Threads.Count; } catch { ThreadCount = 0; }
-            try { StartTime = UnderlyingProcess.StartTime; } catch { StartTime = null; }
-            try { Priority = UnderlyingProcess.PriorityClass.ToString(); } catch { Priority = "Access Denied"; }
+            if (!_ignoreStartTime)
+            {
+                try { StartTime = UnderlyingProcess.StartTime; }
+                catch { StartTime = null; _ignoreStartTime = true; }
+            }
+
+            if (!_ignorePriority)
+            {
+                try { Priority = UnderlyingProcess.PriorityClass.ToString(); }
+                catch { Priority = "Access Denied"; _ignorePriority = true; }
+            }
         }
     }
 }

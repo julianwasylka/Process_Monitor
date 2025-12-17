@@ -132,9 +132,10 @@ namespace ProcessMonitor.ViewModels
 
         private void LoadProcesses()
         {
-            var currentIds = Processes.Select(p => p.Id).ToList();
             var systemProcesses = Process.GetProcesses();
+            var systemIds = systemProcesses.Select(p => p.Id).ToList();
 
+            var currentIds = Processes.Select(p => p.Id).ToList();
             foreach (var proc in systemProcesses)
             {
                 if (!currentIds.Contains(proc.Id))
@@ -143,12 +144,15 @@ namespace ProcessMonitor.ViewModels
                 }
             }
 
-            var activeIds = systemProcesses.Select(p => p.Id).ToList();
-            var toRemove = Processes.Where(p => !activeIds.Contains(p.Id)).ToList();
-
+            var toRemove = Processes.Where(p => !systemIds.Contains(p.Id)).ToList();
             foreach (var item in toRemove)
             {
                 Processes.Remove(item);
+            }
+
+            foreach (var item in Processes)
+            {
+                item.RefreshData();
             }
         }
 
@@ -184,7 +188,6 @@ namespace ProcessMonitor.ViewModels
 
             try
             {
-                // Pobieramy ID wątków
                 foreach (ProcessThread thread in SelectedProcess.UnderlyingProcess.Threads)
                 {
                     SelectedProcessThreads.Add($"ID: {thread.Id} | Stan: {thread.ThreadState}");
